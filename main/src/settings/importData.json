@@ -1,0 +1,34 @@
+{
+  "patterns": [
+    {
+      "name": "screenplay",
+      "getEndPoint": "/screenplay",
+      "createAndUpdateEndPoint": "/screenplay"
+    },
+    {
+      "name": "delaydScreenplay",
+      "getEndPoint": "/delaydScreenplay",
+      "createAndUpdateEndPoint": "/delaydScreenplay"
+    },
+    {
+      "name": "setting",
+      "getEndPoint": "/setting",
+      "createAndUpdateEndPoint": "/setting"
+    },
+    {
+      "name": "message",
+      "getEndPoint": "/message",
+      "createAndUpdateEndPoint": "/message"
+    },
+    {
+      "name": "select",
+      "getEndPoint": "/select",
+      "createAndUpdateEndPoint": "/select"
+    },
+    {
+      "name": "question",
+      "getEndPoint": "/question",
+      "createAndUpdateEndPoint": "/question"
+    }
+  ]
+}
