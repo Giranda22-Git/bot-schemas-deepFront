@@ -5,7 +5,7 @@
         v-for="pattern in $options.importData.patterns"
         class="pattern"
         :key="pattern.name"
-        @click="getNodes($route.query.bot, pattern.getEndPoint)"
+        @click="getNodes($route.query.bot, pattern.getEndPoint, pattern.createAndUpdateEndPoint)"
       >
         {{ pattern.name }}
       </div>
@@ -14,10 +14,10 @@
     <div class="nodes_wrapper">
       <div class="node"
         v-for="node in currentNodes"
-        :key="node._id"
+        :key="node.code._id"
         @click="updateNode(node)"
       >
-        {{ node.name }}
+        {{ node.code.name }}
       </div>
     </div>
   </div>
@@ -40,10 +40,35 @@ export default {
     updateNode (node) {
       EventBus.$emit('newNode', node)
     },
-    async getNodes (url, endPoint) {
+    async getNodes (url, getEndPoint, createAndUpdateEndPoint) {
       try {
-        const response = await axios.get(url + endPoint)
-        this.currentNodes = response.data
+        const response = await axios.get(url + getEndPoint)
+
+        // clean array of nodes
+        this.currentNodes = []
+
+        for (const tmpNode of response.data) {
+          this.currentNodes.push({
+            code: tmpNode,
+            settings: {
+              url,
+              getEndPoint,
+              createAndUpdateEndPoint
+            }
+          })
+        }
+
+        this.currentNodes.push({
+          code: {
+            _id: 'newNode',
+            name: 'Создать новую ноду'
+          },
+          settings: {
+            url,
+            getEndPoint,
+            createAndUpdateEndPoint
+          }
+        })
       }
       catch (err) {
         alert('error, server is dead\n\n' + err)
