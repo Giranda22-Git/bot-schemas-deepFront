@@ -5,7 +5,7 @@
         v-for="pattern in $options.importData.patterns"
         class="pattern"
         :key="pattern.name"
-        @click="getNodes($route.query.bot, pattern.getEndPoint, pattern.createAndUpdateEndPoint)"
+        @click="getNodes($route.query.bot, pattern.getEndPoint, pattern.createAndUpdateEndPoint, pattern.deleteEndPoint)"
       >
         {{ pattern.name }}
       </div>
@@ -35,12 +35,15 @@ export default {
     currentNodes: []
   }),
   mounted () {
+    EventBus.$on('updateNodes', async val => {
+      await this.getNodes(val.settings.url, val.settings.getEndPoint, val.settings.createAndUpdateEndPoint, val.settings.deleteEndPoint)
+    })
   },
   methods: {
     updateNode (node) {
       EventBus.$emit('newNode', node)
     },
-    async getNodes (url, getEndPoint, createAndUpdateEndPoint) {
+    async getNodes (url, getEndPoint, createAndUpdateEndPoint, deleteEndPoint) {
       try {
         const response = await axios.get(url + getEndPoint)
 
@@ -51,9 +54,11 @@ export default {
           this.currentNodes.push({
             code: tmpNode,
             settings: {
+              nodeName: tmpNode.name,
               url,
               getEndPoint,
-              createAndUpdateEndPoint
+              createAndUpdateEndPoint,
+              deleteEndPoint
             }
           })
         }
@@ -64,9 +69,11 @@ export default {
             name: 'Создать новую ноду'
           },
           settings: {
+            nodeName: 'Создать новую ноду',
             url,
             getEndPoint,
-            createAndUpdateEndPoint
+            createAndUpdateEndPoint,
+            deleteEndPoint
           }
         })
       }

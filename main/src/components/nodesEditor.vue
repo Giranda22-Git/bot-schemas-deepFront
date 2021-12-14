@@ -8,17 +8,23 @@
         Сохранить текущую ноду
       </div>
 
+      <div class="saveButton element"
+        @click="restartBot"
+      >
+        Перезапустить бота
+      </div>
+
       <div class="requstsLogs element">
         Requests Logs:
         <div class="log"
-          v-for="log in requestsLogs"
+          v-for="log in reverseRequestsLogs"
           :key="log.id"
         >
           {{ log.value }}
         </div>
       </div>
 
-      <div class="editorError">
+      <div class="editorError element">
         <div>
           Last Editor error:
         </div>
@@ -26,17 +32,25 @@
           {{ editorError }}
         </span>
       </div>
+
+      <div class="saveButton element"
+        @click="deleteCurrentNode"
+      >
+        Удалить текущую ноду
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import VJsoneditor from 'v-jsoneditor'
+import importData from '@/settings/importData.json'
 import EventBus from '@/components/EventBus.js'
 import axios from 'axios'
 
 export default {
   name: "nodesEditor",
+  importData,
   data: () => ({
     json: {},
     currentNodeSettings: {},
@@ -56,6 +70,11 @@ export default {
   components: {
     VJsoneditor
   },
+  computed: {
+    reverseRequestsLogs: function () {
+      return this.requestsLogs.reverse()
+    }
+  },
   methods: {
     onEditorError (err) {
       this.editorError = err
@@ -63,9 +82,40 @@ export default {
     getRandomArbitrary (min, max) {
       return Math.random() * (max - min) + min
     },
+    async restartBot () {
+      try {
+        const response = await axios.post(this.$route.query.bot + this.$options.importData.mainSettings.restartEndPoint)
+
+        if (response.data === 'OK') {
+          this.requestsLogs.push({ value: 'Бот перезапущен', id: this.getRandomArbitrary(1, 100000) })
+        }
+      }
+      catch (err) {
+        this.requestsLogs.push({ value: err, id: this.getRandomArbitrary(1, 100000) })
+      }
+    },
+    updateNodes () {
+      EventBus.$emit('updateNodes', { settings: this.currentNodeSettings })
+    },
+    async deleteCurrentNode () {
+      try {
+        const response = await axios.delete(this.currentNodeSettings.url + this.currentNodeSettings.deleteEndPoint, { data: {name: this.currentNodeSettings.nodeName} })
+        this.requestsLogs.push({ value: 'удалено: ' + response.data, id: this.getRandomArbitrary(1, 100000) })
+        this.updateNodes()
+      } catch (err) {
+        this.requestsLogs.push({ value: err, id: this.getRandomArbitrary(1, 100000) })
+      }
+    },
     async saveCurrentNode () {
-      const response = await axios.post(this.currentNodeSettings.url + this.currentNodeSettings.createAndUpdateEndPoint, this.json)
-      this.requestsLogs.push({value: response.data, id: this.getRandomArbitrary(1, 100000)})
+      try {
+        const response = await axios.post(this.currentNodeSettings.url + this.currentNodeSettings.createAndUpdateEndPoint, this.json)
+        if (response.data === 'OK') {
+          this.requestsLogs.push({value: 'сохранено', id: this.getRandomArbitrary(1, 100000)})
+        }
+        this.updateNodes()
+      } catch (err) {
+        this.requestsLogs.push({ value: err, id: this.getRandomArbitrary(1, 100000) })
+      }
     },
     isObject (val) {
       if (
